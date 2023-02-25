@@ -17,6 +17,10 @@ func (v *LVal) Next() *LVal {
 	return v.next
 }
 
+func NewLList() *LList {
+	return &LList{}
+}
+
 func (l *LList) String() string {
 	val := l.head
 	outStr := "("

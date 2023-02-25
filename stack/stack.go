@@ -10,7 +10,7 @@ type Stack struct {
 }
 
 func NewStack() *Stack {
-	return &Stack{&llist.LList{}}
+	return &Stack{llist.NewLList()}
 }
 
 func (s *Stack) String() string {
