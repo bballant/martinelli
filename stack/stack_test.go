@@ -1,12 +1,11 @@
-package ht
+package stack
 
 import (
 	"strings"
 	"testing"
 )
 
-func TestHT(t *testing.T) {
-	table := HTCreate()
+func TestStack(t *testing.T) {
 	text := `The approach will not be easy. You are required to maneuver
       straight down this trench and skim the surface to this point. The
       target area is only two meters wide. It’s a small thermal exhaust
@@ -19,21 +18,20 @@ func TestHT(t *testing.T) {
       bigger than two meters. Man your ships! And may the Force be with you!`
 
 	words := strings.Fields(text)
-
+	stack := NewStack()
 	for _, w := range words {
-		val := HTGet(table, w)
-		if val == nil {
-			HTSet(table, w, 1)
-		} else {
-			HTSet(table, w, val.(int)+1)
-		}
+		stack.Push(w)
 	}
 
-	if HTGet(table, "approach").(int) != 1 {
-		t.Error(`"approach" should appear once`)
+	if stack.Len() != len(words) {
+		t.Error(`stack and words len be the same.`)
 	}
-	if HTGet(table, "The").(int) != 4 {
-		t.Error(`"The" should appear 4 times`)
+
+	if stack.Pop() != "you!" {
+		t.Error(`head of stack should be "you!"`)
 	}
-	//HTPrint(table)
+
+	if stack.Peek() != "with" {
+		t.Error(`new head of stack should be "with"`)
+	}
 }

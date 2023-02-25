@@ -10,7 +10,11 @@ type LVal struct {
 
 type LList struct {
 	head *LVal
-	len  uint64
+	len  int
+}
+
+func (v *LVal) Next() *LVal {
+	return v.next
 }
 
 func (l *LList) String() string {
@@ -31,6 +35,23 @@ func (l *LList) Cons(value any) *LList {
 	return &LList{&val, l.len + 1}
 }
 
+func (l *LList) Push(value any) {
+	val := LVal{value, l.head}
+	l.head = &val
+	l.len++
+}
+
+func (l *LList) Pop() any {
+	head := l.head
+	if head == nil {
+		return nil
+	}
+	l.head = head.next
+	l.len--
+
+	return head.value
+}
+
 func (l *LList) First() any {
 	head := l.head
 	if head == nil {
@@ -46,7 +67,7 @@ func (l *LList) Rest() *LList {
 	return &LList{(*l.head).next, l.len - 1}
 }
 
-func (l *LList) Len() uint64 {
+func (l *LList) Len() int {
 	return l.len
 }
 
