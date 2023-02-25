@@ -1,15 +1,16 @@
+// Copyright 1977 Our Mothers. All Rights Reserved.
 package llist
 
 import "fmt"
 
 type LVal struct {
-	value interface{}
+	value any
 	next  *LVal
 }
 
 type LList struct {
 	head *LVal
-	size uint64
+	len  uint64
 }
 
 func (l *LList) String() string {
@@ -25,12 +26,12 @@ func (l *LList) String() string {
 	return fmt.Sprintln(outStr)
 }
 
-func (l *LList) Cons(value interface{}) *LList {
+func (l *LList) Cons(value any) *LList {
 	val := LVal{value, l.head}
-	return &LList{&val, l.size + 1}
+	return &LList{&val, l.len + 1}
 }
 
-func (l *LList) First() interface{} {
+func (l *LList) First() any {
 	head := l.head
 	if head == nil {
 		return nil
@@ -42,14 +43,14 @@ func (l *LList) Rest() *LList {
 	if l.head == nil {
 		return nil
 	}
-	return &LList{(*l.head).next, l.size - 1}
+	return &LList{(*l.head).next, l.len - 1}
 }
 
-func (l *LList) Size() uint64 {
-	return l.size
+func (l *LList) Len() uint64 {
+	return l.len
 }
 
-func (l *LList) Map(fn func(interface{}) interface{}) *LList {
+func (l *LList) Map(fn func(any) any) *LList {
 	newl := LList{}
 	currv := l.head
 	var prev *LVal
@@ -66,12 +67,12 @@ func (l *LList) Map(fn func(interface{}) interface{}) *LList {
 	return &newl
 }
 
-func LListCreateWith(values []interface{}) *LList {
+func LListCreateWith(values []any) *LList {
 	var l LList = LList{}
 	for i := len(values) - 1; i >= 0; i-- {
 		val := LVal{values[i], l.head}
 		l.head = &val
-		l.size++
+		l.len++
 	}
 	return &l
 }

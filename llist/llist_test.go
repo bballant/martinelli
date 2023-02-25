@@ -19,8 +19,8 @@ func TestLList(t *testing.T) {
       bigger than two meters. Man your ships! And may the Force be with you!`
 
 	words := strings.Fields(text)
-	// convert to []interface{}
-	wordz := make([]interface{}, len(words))
+	// convert to []any
+	wordz := make([]any, len(words))
 	for i := range wordz {
 		wordz[i] = words[i]
 	}
@@ -32,7 +32,7 @@ func TestLList(t *testing.T) {
 		t.Error(`"The" should be first`)
 	}
 
-	upper := func(strIn interface{}) interface{} {
+	upper := func(strIn any) any {
 		return strings.ToUpper(strIn.(string))
 	}
 
