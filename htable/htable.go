@@ -15,23 +15,23 @@ type HVal struct {
 
 type HTable struct {
 	vals     []*HVal
-	capacity uint64
-	len      uint64
+	capacity int
+	len      int
 }
 
-func hashKey(key []byte) uint64 {
-	hash := fnv.New64()
-	hash.Write(key)
-	return hash.Sum64()
+func hashIndex(capacity int, key string) int {
+	hash := fnv.New32()
+	hash.Write([]byte(key))
+	hashVal := hash.Sum32()
+	return int(hashVal % uint32(capacity-1))
 }
 
-func keyIndex(table *HT, key string) uint64 {
-	hash := hashKey([]byte(key))
-	return hash % ((*table).capacity - 1)
+func NewHTableWithCap(capacity int) *HTable {
+	return &(HTable{make([]*HVal, capacity), capacity, 0})
 }
 
-func NewHTable() *HTable {
-	return &(HTable{make([]*HVal, 16), 16, 0})
+func New() *HTable {
+	return NewHTableWithCap(16)
 }
 
 func (t *HTable) String() string {
@@ -46,37 +46,22 @@ func (t *HTable) String() string {
 	return outStr
 }
 
-type HTEntry struct {
-	key   string
-	value interface{}
-}
-
-type HT struct {
-	entries  []*HTEntry
-	capacity uint64
-	size     uint64
-}
-
-// func-away some boilerplate to prevent long lines
-func found(table *HT, index uint64, key string) bool {
-	return (*(*table).entries[index]).key == key
-}
-
 /*
  *  Returns the index for the matching key or the first empty
  *  spot in the table.entities slice
  */
-func findIndex(table *HT, key string) (uint64, error) {
-	index := keyIndex(table, key)
+func (t *HTable) find(key string) (int, error) {
+	index := hashIndex(t.capacity, key)
+	//fmt.Printf("%s: %d\n%v\n", key, index, t)
 	counter := index
-	var idx uint64
+	var idx int
 	for {
-		idx = counter % (*table).capacity
+		idx = counter % t.capacity
 		// prevent infinite loop
-		if idx == index && counter > (*table).capacity {
+		if idx == index && counter > t.capacity {
 			return 0, errors.New("Table is full!")
 		}
-		if (*table).entries[idx] == nil || found(table, idx, key) {
+		if t.vals[idx] == nil || t.vals[idx].key == key {
 			break
 		}
 		counter++
@@ -84,97 +69,84 @@ func findIndex(table *HT, key string) (uint64, error) {
 	return idx, nil
 }
 
-func setEntry(table *HT, entry *HTEntry) {
-	index, err := findIndex(table, (*entry).key)
+func (t *HTable) setVal(val *HVal) {
+	index, err := t.find(val.key)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	// it's either nil or ours, so set it
-	(*table).entries[index] = entry
-	(*table).size++
+	t.vals[index] = val
+	t.len++
 }
 
-func grow(table *HT) error {
-	cap := (*table).capacity
-	if cap > math.MaxInt64/2 {
-		return errors.New("Cannot grow table!")
+func (t *HTable) grow() (*HTable, error) {
+	cap := t.capacity
+	if cap == math.MaxInt {
+		return nil, errors.New("Cannot grow table!")
 	}
-	newHT := HT{make([]*HTEntry, cap*2), cap * 2, 0}
-	for _, e := range (*table).entries {
-		if e == nil {
+
+	var newCap int
+	if cap > math.MaxInt/2 {
+		newCap = math.MaxInt
+	} else {
+		newCap = cap * 2
+	}
+	newHT := NewHTableWithCap(newCap)
+	for _, v := range t.vals {
+		if v == nil {
 			continue
 		}
-		setEntry(&newHT, e)
+		newHT.setVal(v)
 	}
-	*table = newHT
-	return nil
+	return newHT, nil
 }
 
-func HTCreate() *HT {
-	return &(HT{make([]*HTEntry, 16), 16, 0})
-}
-
-func HTPrint(table *HT) {
-	fmt.Printf("Table w/ capacity %d, size %d\n", (*table).capacity, (*table).size)
-	for _, v := range (*table).entries {
-		if v == nil {
-			fmt.Println("nil")
-		} else {
-			fmt.Println(*v)
-		}
-	}
-}
-
-func HTGet(table *HT, key string) interface{} {
-	index, err := findIndex(table, key)
+func (t *HTable) Get(key string) any {
+	index, err := t.find(key)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if (*table).entries[index] == nil {
+	if t.vals[index] == nil {
 		return nil
 	}
-	return (*(*table).entries[index]).value
+	return t.vals[index].value
 }
 
-func HTSet(table *HT, key string, value interface{}) {
-	index, err := findIndex(table, key)
+func (t *HTable) Set(key string, value any) *HTable {
+	index, err := t.find(key)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if (*table).entries[index] != nil {
-		(*(*table).entries[index]).value = value
+	table := *t
+	if table.vals[index] != nil {
+		table.vals[index].value = value
 	} else {
-		e := HTEntry{key, value}
-		(*table).entries[index] = &e
-		(*table).size++
+		e := HVal{key, value}
+		table.vals[index] = &e
+		table.len++
 	}
-	if (*table).size > ((*table).capacity/4)*3 {
+	if table.len > (table.capacity/4)*3 {
 		log.Println("Need to grow table")
-		grow(table)
+		newTable, newErr := table.grow()
+		log.Println(newTable)
+		if newErr != nil {
+			log.Fatalln(newErr)
+		}
+		table = *newTable
 	}
+	return &table
 }
 
-func HTDelete(table *HT, key string) {
-	index, err := findIndex(table, key)
+func (t *HTable) Delete(key string) {
+	index, err := t.find(key)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if (*table).entries[index] == nil || !found(table, index, key) {
+	if t.vals[index] == nil ||
+		t.vals[index].key != key {
 		// not found
 		return
 	}
-	(*table).entries[index] = nil
-	(*table).size--
-}
-
-func Run() {
-	table := HTCreate()
-	HTSet(table, "cool", "dude")
-	HTSet(table, "rad", "man")
-	HTDelete(table, "rad")
-	HTSet(table, "rad", "dude")
-	HTSet(table, "rad", "skilla")
-	HTPrint(table)
-	fmt.Println(hashKey([]byte("Cool")))
-	fmt.Println(HTGet(table, "cool"))
+	t.vals[index] = nil
+	t.len--
 }

@@ -1,12 +1,13 @@
 package htable
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
 
-func TestHT(t *testing.T) {
-	table := HTCreate()
+func TestHTable(t *testing.T) {
+	table := New()
 	text := `The approach will not be easy. You are required to maneuver
       straight down this trench and skim the surface to this point. The
       target area is only two meters wide. It’s a small thermal exhaust
@@ -21,18 +22,20 @@ func TestHT(t *testing.T) {
 	words := strings.Fields(text)
 
 	for _, w := range words {
-		val := HTGet(table, w)
+		val := table.Get(w)
 		if val == nil {
-			HTSet(table, w, 1)
+			table = table.Set(w, 1)
 		} else {
-			HTSet(table, w, val.(int)+1)
+			table = table.Set(w, val.(int)+1)
 		}
 	}
 
-	if HTGet(table, "approach").(int) != 1 {
+	fmt.Println(table)
+
+	if table.Get("approach").(int) != 1 {
 		t.Error(`"approach" should appear once`)
 	}
-	if HTGet(table, "The").(int) != 4 {
+	if table.Get("The").(int) != 4 {
 		t.Error(`"The" should appear 4 times`)
 	}
 	//HTPrint(table)
