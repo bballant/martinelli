@@ -96,9 +96,32 @@ func (t *HTable) grow() (*HTable, error) {
 		if v == nil {
 			continue
 		}
-		newHT.setVal(v)
+		t.setVal(v)
 	}
 	return newHT, nil
+}
+
+func (t *HTable) grow__() error {
+	cap := t.capacity
+	if cap == math.MaxInt {
+		return errors.New("Cannot grow table!")
+	}
+
+	var newCap int
+	if cap > math.MaxInt/2 {
+		newCap = math.MaxInt
+	} else {
+		newCap = cap * 2
+	}
+	newHT := NewHTableWithCap(newCap)
+	for _, v := range t.vals {
+		if v == nil {
+			continue
+		}
+		newHT.setVal(v)
+	}
+	*t = *newHT
+	return nil
 }
 
 func (t *HTable) Get(key string) any {
@@ -112,29 +135,22 @@ func (t *HTable) Get(key string) any {
 	return t.vals[index].value
 }
 
-func (t *HTable) Set(key string, value any) *HTable {
+func (t *HTable) Set(key string, value any) {
 	index, err := t.find(key)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	table := *t
-	if table.vals[index] != nil {
-		table.vals[index].value = value
+	if t.vals[index] != nil {
+		t.vals[index].value = value
 	} else {
 		e := HVal{key, value}
-		table.vals[index] = &e
-		table.len++
+		t.vals[index] = &e
+		t.len++
 	}
-	if table.len > (table.capacity/4)*3 {
+	if t.len > (t.capacity/4)*3 {
 		log.Println("Need to grow table")
-		newTable, newErr := table.grow()
-		log.Println(newTable)
-		if newErr != nil {
-			log.Fatalln(newErr)
-		}
-		table = *newTable
+		t.grow__()
 	}
-	return &table
 }
 
 func (t *HTable) Delete(key string) {

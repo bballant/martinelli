@@ -24,9 +24,9 @@ func TestHTable(t *testing.T) {
 	for _, w := range words {
 		val := table.Get(w)
 		if val == nil {
-			table = table.Set(w, 1)
+			table.Set(w, 1)
 		} else {
-			table = table.Set(w, val.(int)+1)
+			table.Set(w, val.(int)+1)
 		}
 	}
 
