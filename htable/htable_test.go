@@ -1,7 +1,6 @@
 package htable
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -30,13 +29,11 @@ func TestHTable(t *testing.T) {
 		}
 	}
 
-	fmt.Println(table)
-
 	if table.Get("approach").(int) != 1 {
 		t.Error(`"approach" should appear once`)
 	}
+
 	if table.Get("The").(int) != 4 {
 		t.Error(`"The" should appear 4 times`)
 	}
-	//HTPrint(table)
 }

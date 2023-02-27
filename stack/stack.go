@@ -9,8 +9,8 @@ type Stack struct {
 	l *llist.LList
 }
 
-func NewStack() *Stack {
-	return &Stack{llist.NewLList()}
+func New() *Stack {
+	return &Stack{llist.New()}
 }
 
 func (s *Stack) String() string {

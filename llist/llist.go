@@ -17,8 +17,22 @@ func (v *LVal) Next() *LVal {
 	return v.next
 }
 
+func New() *LList {
+	return &LList{}
+}
+
 func NewLList() *LList {
 	return &LList{}
+}
+
+func NewWithValues(values []any) *LList {
+	var l LList = LList{}
+	for i := len(values) - 1; i >= 0; i-- {
+		val := LVal{values[i], l.head}
+		l.head = &val
+		l.len++
+	}
+	return &l
 }
 
 func (l *LList) String() string {
@@ -26,17 +40,12 @@ func (l *LList) String() string {
 	outStr := "("
 	delim := ""
 	for val != nil {
-		outStr = fmt.Sprintf("%s%s%v", outStr, delim, (*val).value)
+		outStr = fmt.Sprintf("%s%s%v", outStr, delim, val.value)
 		delim = " "
-		val = (*val).next
+		val = val.next
 	}
 	outStr = fmt.Sprintf("%s)", outStr)
 	return fmt.Sprintln(outStr)
-}
-
-func (l *LList) Cons(value any) *LList {
-	val := LVal{value, l.head}
-	return &LList{&val, l.len + 1}
 }
 
 func (l *LList) Push(value any) {
@@ -57,18 +66,17 @@ func (l *LList) Pop() any {
 }
 
 func (l *LList) First() any {
-	head := l.head
-	if head == nil {
+	if l.head == nil {
 		return nil
 	}
-	return (*l.head).value
+	return l.head.value
 }
 
 func (l *LList) Rest() *LList {
 	if l.head == nil {
 		return nil
 	}
-	return &LList{(*l.head).next, l.len - 1}
+	return &LList{l.head.next, l.len - 1}
 }
 
 func (l *LList) Len() int {
@@ -90,14 +98,4 @@ func (l *LList) Map(fn func(any) any) *LList {
 		currv = currv.next
 	}
 	return &newl
-}
-
-func LListCreateWith(values []any) *LList {
-	var l LList = LList{}
-	for i := len(values) - 1; i >= 0; i-- {
-		val := LVal{values[i], l.head}
-		l.head = &val
-		l.len++
-	}
-	return &l
 }

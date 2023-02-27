@@ -25,7 +25,7 @@ func TestLList(t *testing.T) {
 		wordz[i] = words[i]
 	}
 
-	ll := LListCreateWith(wordz)
+	ll := NewWithValues(wordz)
 	fmt.Println(ll)
 
 	if ll.First().(string) != "The" {

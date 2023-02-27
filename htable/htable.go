@@ -79,29 +79,7 @@ func (t *HTable) setVal(val *HVal) {
 	t.len++
 }
 
-func (t *HTable) grow() (*HTable, error) {
-	cap := t.capacity
-	if cap == math.MaxInt {
-		return nil, errors.New("Cannot grow table!")
-	}
-
-	var newCap int
-	if cap > math.MaxInt/2 {
-		newCap = math.MaxInt
-	} else {
-		newCap = cap * 2
-	}
-	newHT := NewHTableWithCap(newCap)
-	for _, v := range t.vals {
-		if v == nil {
-			continue
-		}
-		t.setVal(v)
-	}
-	return newHT, nil
-}
-
-func (t *HTable) grow__() error {
+func (t *HTable) grow() error {
 	cap := t.capacity
 	if cap == math.MaxInt {
 		return errors.New("Cannot grow table!")
@@ -149,7 +127,7 @@ func (t *HTable) Set(key string, value any) {
 	}
 	if t.len > (t.capacity/4)*3 {
 		log.Println("Need to grow table")
-		t.grow__()
+		t.grow()
 	}
 }
 
